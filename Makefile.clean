@@ -1,0 +1,7 @@
+.PHONY: clean fresh
+
+clean:
+	docker-compose down -v
+	docker system prune -f
+
+fresh: stop clean rebuild run

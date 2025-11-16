@@ -1,0 +1,22 @@
+.PHONY: build run run-detached stop logs health quick-run
+
+build:
+	docker-compose build
+
+run:
+	docker-compose up
+
+run-detached:
+	docker-compose up -d
+
+stop:
+	docker-compose down
+
+logs:
+	docker-compose logs -f app
+
+health:
+	curl -f http://localhost:$(PORT)/health || echo "The service is unavailable"
+
+quick-run:
+	docker-compose up --build -d
