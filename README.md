@@ -61,4 +61,5 @@ make fresh - Полная очистка и пересборка
 
 После запуска откройте в браузере:
 Health-check: http://localhost:8080/health
-Swagger UI: http://localhost:8080/swagger/index.html (после make swagger)
+Swagger UI api: http://localhost:8080/docs/api/index.html (после make swagger)
+тз openapi.yml: http://localhost:8080/docs/technicial-task/index.html (после make swagger)
