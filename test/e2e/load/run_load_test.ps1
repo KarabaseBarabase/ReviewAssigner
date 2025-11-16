@@ -13,4 +13,4 @@ Write-Host "3. Mixed Stress Test (30s)" -ForegroundColor Red
 hey -z 30s -c 100 -m GET "http://localhost:8080/health"
 Write-Host ""
 
-Write-Host "🎉 ALL TESTS COMPLETED!" -ForegroundColor Green
+Write-Host "ALL TESTS COMPLETED!" -ForegroundColor Green
