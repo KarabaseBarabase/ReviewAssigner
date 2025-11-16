@@ -1,0 +1,507 @@
+basePath: /
+definitions:
+  handler.AddTeamRequest:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.TeamMember'
+        type: array
+      team_name:
+        example: backend
+        type: string
+    required:
+    - members
+    - team_name
+    type: object
+  handler.CreatePRRequest:
+    properties:
+      author_id:
+        example: user-456
+        type: string
+      pull_request_id:
+        example: pr-123
+        type: string
+      pull_request_name:
+        example: Fix login issue
+        type: string
+    required:
+    - author_id
+    - pull_request_id
+    - pull_request_name
+    type: object
+  handler.DeactivateUsersRequest:
+    properties:
+      user_ids:
+        example:
+        - user-123
+        - user-456
+        items:
+          type: string
+        type: array
+    required:
+    - user_ids
+    type: object
+  handler.DeactivateUsersResponse:
+    properties:
+      results:
+        additionalProperties: true
+        type: object
+      team_name:
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        properties:
+          code:
+            type: string
+          message:
+            type: string
+        type: object
+    type: object
+  handler.HealthResponse:
+    properties:
+      service:
+        type: string
+      status:
+        type: string
+    type: object
+  handler.MergePRRequest:
+    properties:
+      pull_request_id:
+        example: pr-123
+        type: string
+    required:
+    - pull_request_id
+    type: object
+  handler.PRResponse:
+    properties:
+      pr:
+        $ref: '#/definitions/models.PullRequest'
+    type: object
+  handler.ReassignReviewerRequest:
+    properties:
+      old_reviewer_id:
+        example: user-789
+        type: string
+      pull_request_id:
+        example: pr-123
+        type: string
+    required:
+    - old_reviewer_id
+    - pull_request_id
+    type: object
+  handler.ReassignReviewerResponse:
+    properties:
+      pr:
+        $ref: '#/definitions/models.PullRequest'
+      replaced_by:
+        type: string
+    type: object
+  handler.SetUserActiveRequest:
+    properties:
+      is_active:
+        example: false
+        type: boolean
+      user_id:
+        example: user-123
+        type: string
+    required:
+    - user_id
+    type: object
+  handler.StatsResponse:
+    properties:
+      pr_metrics:
+        additionalProperties: true
+        type: object
+      user_assignments:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  handler.TeamResponse:
+    properties:
+      team:
+        $ref: '#/definitions/models.Team'
+    type: object
+  handler.UserPRsResponse:
+    properties:
+      pull_requests:
+        items:
+          $ref: '#/definitions/models.PullRequestShort'
+        type: array
+      user_id:
+        type: string
+    type: object
+  handler.UserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  models.PullRequest:
+    properties:
+      assigned_reviewers:
+        items:
+          type: string
+        type: array
+      author_id:
+        type: string
+      createdAt:
+        type: string
+      mergedAt:
+        type: string
+      pull_request_id:
+        type: string
+      pull_request_name:
+        type: string
+      status:
+        type: string
+    type: object
+  models.PullRequestShort:
+    properties:
+      author_id:
+        type: string
+      pull_request_id:
+        type: string
+      pull_request_name:
+        type: string
+      status:
+        type: string
+    type: object
+  models.Team:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/models.TeamMember'
+        type: array
+      team_name:
+        type: string
+    type: object
+  models.TeamMember:
+    properties:
+      is_active:
+        type: boolean
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+  models.User:
+    properties:
+      created_at:
+        type: string
+      is_active:
+        type: boolean
+      team_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: shkeera@mail.ru
+    name: API Support
+    url: http://localhost:8080
+  description: Микросервис для автоматического назначения ревьюеров на Pull Request'ы
+  title: PR Reviewer Assignment Service
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      consumes:
+      - application/json
+      description: Проверка работоспособности сервиса
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статус сервиса
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /pullRequest/create:
+    post:
+      consumes:
+      - application/json
+      description: Создает новый PR и автоматически назначает ревьюеров
+      parameters:
+      - description: Данные Pull Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreatePRRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданный PR
+          schema:
+            $ref: '#/definitions/handler.PRResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: PR уже существует
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создание Pull Request
+      tags:
+      - pull-requests
+  /pullRequest/merge:
+    post:
+      consumes:
+      - application/json
+      description: Помечает PR как мердженный
+      parameters:
+      - description: ID Pull Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.MergePRRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленный PR
+          schema:
+            $ref: '#/definitions/handler.PRResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: PR не найден
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Merge Pull Request
+      tags:
+      - pull-requests
+  /pullRequest/reassign:
+    post:
+      consumes:
+      - application/json
+      description: Заменяет ревьюера на PR на другого активного участника команды
+      parameters:
+      - description: Данные для замены ревьюера
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ReassignReviewerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результат замены
+          schema:
+            $ref: '#/definitions/handler.ReassignReviewerResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: PR или ревьюер не найден
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Ошибка замены ревьюера
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Замена ревьюера
+      tags:
+      - pull-requests
+  /stats/pr-metrics:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает общую статистику по PR
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Метрики PR
+          schema:
+            $ref: '#/definitions/handler.StatsResponse'
+      summary: Метрики Pull Requests
+      tags:
+      - statistics
+  /stats/user-assignments:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает количество назначений PR на каждого пользователя
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Статистика назначений
+          schema:
+            $ref: '#/definitions/handler.StatsResponse'
+      summary: Статистика назначений по пользователям
+      tags:
+      - statistics
+  /team/{teamName}/deactivate-users:
+    post:
+      consumes:
+      - application/json
+      description: Деактивирует пользователей команды и переназначает открытые PR
+      parameters:
+      - description: Название команды
+        in: path
+        name: teamName
+        required: true
+        type: string
+      - description: Список ID пользователей для деактивации
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.DeactivateUsersRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Результаты деактивации
+          schema:
+            $ref: '#/definitions/handler.DeactivateUsersResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Массовая деактивация пользователей
+      tags:
+      - teams
+  /team/add:
+    post:
+      consumes:
+      - application/json
+      description: Создает новую команду с участниками
+      parameters:
+      - description: Данные команды
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.AddTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Созданная команда
+          schema:
+            $ref: '#/definitions/handler.TeamResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Команда уже существует
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Создание команды
+      tags:
+      - teams
+  /team/get:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о команде и её участниках
+      parameters:
+      - description: Название команды
+        in: query
+        name: team_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Информация о команде
+          schema:
+            $ref: '#/definitions/models.Team'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Команда не найдена
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получение информации о команде
+      tags:
+      - teams
+  /users/getReview:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список PR, назначенных на пользователя для ревью
+      parameters:
+      - description: ID пользователя
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Список PR пользователя
+          schema:
+            $ref: '#/definitions/handler.UserPRsResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получение назначенных PR пользователя
+      tags:
+      - users
+  /users/setIsActive:
+    post:
+      consumes:
+      - application/json
+      description: Активирует или деактивирует пользователя
+      parameters:
+      - description: Данные пользователя
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.SetUserActiveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Обновленный пользователь
+          schema:
+            $ref: '#/definitions/handler.UserResponse'
+        "400":
+          description: Ошибка валидации
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Установка активности пользователя
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

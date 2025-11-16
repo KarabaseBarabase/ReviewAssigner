@@ -1,0 +1,28 @@
+.PHONY: dev run-local migrate lint fmt tidy rebuild
+
+dev:
+	DB_HOST=$(DB_HOST) DB_PORT=$(DB_PORT) DB_USER=$(DB_USER) DB_PASSWORD=$(DB_PASSWORD) DB_NAME=$(DB_NAME) go run ./cmd/api
+
+run-local:
+	set DB_HOST=$(DB_HOST)&& \
+	set DB_PORT=$(DB_PORT)&& \
+	set DB_NAME=$(DB_NAME)&& \
+	set DB_USER=$(DB_USER)&& \
+	set DB_PASSWORD=$(DB_PASSWORD)&& \
+	set SERVER_PORT=$(PORT)&& \
+	go run ./cmd/api/main.go
+
+migrate:
+	docker-compose run --rm app ./main migrate
+
+lint:
+	golangci-lint run
+
+fmt:
+	go fmt ./...
+
+tidy:
+	go mod tidy
+
+rebuild:
+	docker-compose build --no-cache

@@ -1,0 +1,12 @@
+.PHONY: swagger swagger-fresh run-swagger dev-swagger
+
+swagger:
+	swag init -g cmd/api/main.go -o ./docs
+
+swagger-fresh:
+	rm -rf ./docs
+	swag init -g cmd/api/main.go -o ./docs
+
+run-swagger: swagger run
+
+dev-swagger: swagger dev
